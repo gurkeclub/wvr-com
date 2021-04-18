@@ -14,6 +14,14 @@ pub enum ProviderInfo {
 #[derive(Serialize, Deserialize)]
 pub enum SetInfo {
     BPM(f64),
+    Width(usize),
+    Height(usize),
+    TargetFps(f64),
+    DynamicResolution(bool),
+    VSync(bool),
+    Screenshot(bool),
+    Fullscreen(bool),
+    LockedSpeed(bool),
 }
 
 #[derive(Serialize, Deserialize)]
