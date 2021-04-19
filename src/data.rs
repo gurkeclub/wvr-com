@@ -1,7 +1,8 @@
 use message_io::network::NetEvent;
 use serde::{Deserialize, Serialize};
 
-use wvr_data::config::project_config::InputConfig;
+use wvr_data::config::project_config::{FilterMode, InputConfig, RenderStageConfig, SampledInput};
+use wvr_data::DataHolder;
 
 #[derive(Serialize, Deserialize)]
 pub enum ProviderInfo {
@@ -13,7 +14,7 @@ pub enum ProviderInfo {
 
 #[derive(Serialize, Deserialize)]
 pub enum SetInfo {
-    BPM(f64),
+    Bpm(f64),
     Width(usize),
     Height(usize),
     TargetFps(f64),
@@ -25,9 +26,22 @@ pub enum SetInfo {
 }
 
 #[derive(Serialize, Deserialize)]
+pub enum RenderStageUpdate {
+    Filter(String),
+    FilterModeParams(FilterMode),
+    Variable(String, DataHolder),
+    Input(String, SampledInput),
+    Name(String),
+}
+
+#[derive(Serialize, Deserialize)]
 pub enum Message {
     Insert((String, InputConfig)),
     Set(SetInfo),
+    AddRenderStage(RenderStageConfig),
+    RemoveRenderStage(usize),
+    UpdateRenderStage(usize, RenderStageUpdate),
+    UpdateFinalStage(RenderStageUpdate),
 }
 
 pub enum MessageEvent {
