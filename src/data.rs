@@ -40,6 +40,7 @@ pub enum Message {
     Set(SetInfo),
     AddRenderStage(RenderStageConfig),
     RemoveRenderStage(usize),
+    MoveRenderStage(usize, usize),
     UpdateRenderStage(usize, RenderStageUpdate),
     UpdateFinalStage(RenderStageUpdate),
 }
