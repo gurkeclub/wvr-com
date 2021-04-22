@@ -1,7 +1,9 @@
 use message_io::network::NetEvent;
 use serde::{Deserialize, Serialize};
 
-use wvr_data::config::project_config::{FilterMode, InputConfig, RenderStageConfig, SampledInput};
+use wvr_data::config::project_config::{
+    FilterMode, InputConfig, RenderStageConfig, SampledInput, Speed,
+};
 use wvr_data::DataHolder;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,9 +37,23 @@ pub enum RenderStageUpdate {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub enum InputUpdate {
+    SetWidth(usize),
+    SetHeight(usize),
+    SetPath(String),
+    SetSpeed(Speed),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Message {
     Insert((String, InputConfig)),
     Set(SetInfo),
+
+    AddInput(String, InputConfig),
+    RemoveInput(String),
+    RenameInput(String, String),
+    UpdateInput(String, InputUpdate),
+
     AddRenderStage(RenderStageConfig),
     RemoveRenderStage(usize),
     MoveRenderStage(usize, usize),
