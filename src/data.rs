@@ -2,7 +2,7 @@ use message_io::network::NetEvent;
 use serde::{Deserialize, Serialize};
 
 use wvr_data::config::project_config::{
-    FilterMode, InputConfig, RenderStageConfig, SampledInput, Speed,
+    BufferPrecision, FilterMode, InputConfig, RenderStageConfig, SampledInput, Speed,
 };
 use wvr_data::DataHolder;
 
@@ -33,6 +33,7 @@ pub enum RenderStageUpdate {
     FilterModeParams(FilterMode),
     Variable(String, DataHolder),
     Input(String, SampledInput),
+    Precision(BufferPrecision),
     Name(String),
 }
 
