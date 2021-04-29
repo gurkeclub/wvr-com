@@ -2,7 +2,7 @@ use message_io::network::NetEvent;
 use serde::{Deserialize, Serialize};
 
 use wvr_data::config::project_config::{
-    BufferPrecision, FilterMode, InputConfig, RenderStageConfig, SampledInput, Speed, Automation
+    Automation, BufferPrecision, FilterMode, InputConfig, RenderStageConfig, SampledInput, Speed,
 };
 use wvr_data::DataHolder;
 
@@ -48,6 +48,9 @@ pub enum InputUpdate {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Message {
+    Start,
+    Stop,
+    Pause,
     Insert((String, InputConfig)),
     Set(SetInfo),
 
