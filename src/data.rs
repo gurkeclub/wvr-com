@@ -1,4 +1,3 @@
-use message_io::network::NetEvent;
 use serde::{Deserialize, Serialize};
 
 use wvr_data::config::project_config::{
@@ -64,8 +63,4 @@ pub enum Message {
     MoveRenderStage(usize, usize),
     UpdateRenderStage(usize, RenderStageUpdate),
     UpdateFinalStage(RenderStageUpdate),
-}
-
-pub enum MessageEvent {
-    Network(NetEvent<Message>),
 }

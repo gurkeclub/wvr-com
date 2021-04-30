@@ -1,47 +1,36 @@
-use std::collections::hash_map::HashMap;
-use std::time::Duration;
-
 use anyhow::Result;
 
-use message_io::events::EventQueue;
-use message_io::network::{Endpoint, NetEvent, NetworkManager};
+use message_io::network::{Endpoint, SendStatus, Transport};
+use message_io::node::{self, NodeHandler};
 
-use crate::data::{Message, MessageEvent};
+use crate::data::Message;
 use wvr_data::config::server_config::ServerConfig;
 
-struct ClientInfo {}
-
 pub struct OrderClient {
-    network: NetworkManager,
-    endpoint: Endpoint,
-    event_queue: EventQueue<MessageEvent>,
+    handler: NodeHandler<Message>,
+    server_id: Endpoint,
 }
 
 impl OrderClient {
     pub fn new(config: &ServerConfig) -> Result<Self> {
-        let mut event_queue = EventQueue::new();
+        let (handler, _) = node::split::<Message>();
 
-        let network_sender = event_queue.sender().clone();
-        let mut network = NetworkManager::new(move |net_event| {
-            network_sender.send(MessageEvent::Network(net_event))
-        });
-
-        let listen_addr = format!("{:}:{:}", config.ip, config.port);
-        let endpoint = network.connect_tcp(&listen_addr)?;
-
-        Ok(Self {
-            network,
-            event_queue,
-            endpoint,
-        })
+        let server_addr = format!("{:}:{:}", config.ip, config.port);
+        let (server_id, _) = handler
+            .network()
+            .connect(Transport::FramedTcp, &server_addr)?;
+        Ok(Self { handler, server_id })
     }
 
-    pub fn send_order(&mut self, message: Message) -> Result<()> {
-        self.network.send(self.endpoint, message)?;
-        Ok(())
-    }
-
-    pub fn broadcast_state(&mut self) {
-        unimplemented!();
+    pub fn send_order(&mut self, message: Message) -> Result<bool> {
+        if let SendStatus::ResourceNotFound = self
+            .handler
+            .network()
+            .send(self.server_id, &bincode::serialize(&message)?)
+        {
+            Ok(false)
+        } else {
+            Ok(true)
+        }
     }
 }

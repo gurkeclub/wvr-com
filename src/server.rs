@@ -1,79 +1,56 @@
-use std::collections::hash_map::HashMap;
 use std::time::Duration;
 
-use message_io::events::EventQueue;
-use message_io::network::{Endpoint, NetEvent, NetworkManager};
+use anyhow::Result;
 
-use crate::data::{Message, MessageEvent};
+use message_io::events::EventReceiver;
+use message_io::network::Transport;
+use message_io::node::{self, NodeHandler, NodeTask, StoredNetEvent, StoredNodeEvent};
+
+use crate::data::Message;
 use wvr_data::config::server_config::ServerConfig;
 
-struct ClientInfo {}
-
 pub struct OrderServer {
-    clients: HashMap<Endpoint, ClientInfo>,
-    _network: NetworkManager,
-    event_queue: EventQueue<MessageEvent>,
+    _handler: NodeHandler<Message>,
+    _node_task: NodeTask,
+    event_receiver: EventReceiver<StoredNodeEvent<Message>>,
 }
 
 impl OrderServer {
-    pub fn new(config: &ServerConfig) -> Self {
-        let mut event_queue = EventQueue::new();
-
-        let network_sender = event_queue.sender().clone();
-        let mut network = NetworkManager::new(move |net_event| {
-            network_sender.send(MessageEvent::Network(net_event))
-        });
-
-        let clients: HashMap<Endpoint, ClientInfo> = HashMap::new();
+    pub fn new(config: &ServerConfig) -> Result<Self> {
+        let (handler, listener) = node::split::<Message>();
 
         let listen_addr = format!("{:}:{:}", config.ip, config.port);
-        match network.listen_tcp(&listen_addr) {
-            Ok(_) => println!("TCP Server running at {}", listen_addr),
-            Err(_) => panic!("Can not listening at selected interface/port"),
-        }
+        handler
+            .network()
+            .listen(Transport::FramedTcp, &listen_addr)?;
 
-        Self {
-            clients,
-            _network: network,
-            event_queue,
-        }
+        let (node_task, event_receiver) = listener.enqueue();
+
+        Ok(Self {
+            _handler: handler,
+            _node_task: node_task,
+            event_receiver,
+        })
     }
 
     pub fn next_order(&mut self, timeout: Option<Duration>) -> Option<Message> {
         let message = if let Some(timeout) = timeout {
-            self.event_queue.receive_event_timeout(timeout)?
+            self.event_receiver.receive_timeout(timeout)?
         } else {
-            self.event_queue.receive()
+            self.event_receiver.receive()
         };
 
         match message {
-            MessageEvent::Network(net_event) => match net_event {
-                NetEvent::Message(_endpoint, message) => {
+            StoredNodeEvent::Network(event) => match event {
+                StoredNetEvent::Message(_, message_data) => {
+                    let message: Message = bincode::deserialize(&message_data).unwrap();
                     return Some(message);
                 }
-                NetEvent::AddedEndpoint(endpoint) => {
-                    self.clients.insert(endpoint, ClientInfo {});
-                    println!(
-                        "Client ({}) connected (total clients: {})",
-                        endpoint.addr(),
-                        self.clients.len()
-                    );
-                }
-                NetEvent::RemovedEndpoint(endpoint) => {
-                    self.clients.remove(&endpoint).unwrap();
-                    println!(
-                        "Client ({}) disconnected (total clients: {})",
-                        endpoint.addr(),
-                        self.clients.len()
-                    );
-                }
+                _ => (),
             },
+            _ => (),
         }
 
         None
-    }
-
-    pub fn broadcast_state(&mut self) {
-        unimplemented!();
     }
 }
