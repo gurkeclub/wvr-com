@@ -7,7 +7,7 @@ use message_io::network::Transport;
 use message_io::node::{self, NodeHandler, NodeTask, StoredNetEvent, StoredNodeEvent};
 
 use crate::data::Message;
-use wvr_data::config::server_config::ServerConfig;
+use wvr_data::config::server::ServerConfig;
 
 pub struct OrderServer {
     _handler: NodeHandler<Message>,
@@ -40,17 +40,10 @@ impl OrderServer {
             self.event_receiver.receive()
         };
 
-        match message {
-            StoredNodeEvent::Network(event) => match event {
-                StoredNetEvent::Message(_, message_data) => {
-                    let message: Message = bincode::deserialize(&message_data).unwrap();
-                    return Some(message);
-                }
-                _ => (),
-            },
-            _ => (),
+        if let StoredNodeEvent::Network(StoredNetEvent::Message(_, message_data)) = message {
+            Some(bincode::deserialize(&message_data).unwrap())
+        } else {
+            None
         }
-
-        None
     }
 }

@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use wvr_data::config::project_config::{
-    Automation, BufferPrecision, FilterMode, InputConfig, RenderStageConfig, SampledInput, Speed,
-};
-use wvr_data::DataHolder;
+use wvr_data::config::filter::FilterMode;
+use wvr_data::config::input::InputConfig;
+use wvr_data::config::rendering::RenderStageConfig;
+use wvr_data::types::DataHolder;
+use wvr_data::types::{Automation, BufferPrecision, InputSampler, Speed};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ProviderInfo {
     Video((String, String, usize, usize, u32)),
     Picture((String, String, usize, usize)),
@@ -13,7 +14,7 @@ pub enum ProviderInfo {
     Cam((String, String, usize, usize)),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum SetInfo {
     Bpm(f64),
     Width(usize),
@@ -26,18 +27,19 @@ pub enum SetInfo {
     LockedSpeed(bool),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum RenderStageUpdate {
     Filter(String),
     FilterModeParams(FilterMode),
     Variable(String, DataHolder),
     VariableAutomation(String, Automation),
-    Input(String, SampledInput),
+    VariableOffset(String, Option<(String, DataHolder)>),
+    Input(String, InputSampler),
     Precision(BufferPrecision),
     Name(String),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum InputUpdate {
     SetWidth(usize),
     SetHeight(usize),
@@ -45,7 +47,7 @@ pub enum InputUpdate {
     SetSpeed(Speed),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Message {
     Start,
     Stop,

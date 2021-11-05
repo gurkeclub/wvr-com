@@ -4,7 +4,7 @@ use message_io::network::{Endpoint, SendStatus, Transport};
 use message_io::node::{self, NodeHandler};
 
 use crate::data::Message;
-use wvr_data::config::server_config::ServerConfig;
+use wvr_data::config::server::ServerConfig;
 
 pub struct OrderClient {
     handler: NodeHandler<Message>,
